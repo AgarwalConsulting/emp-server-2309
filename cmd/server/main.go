@@ -9,17 +9,23 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
+	"algogrit.com/empserver/employees/repository"
 	"algogrit.com/empserver/entities"
 )
 
-var employees = []entities.Employee{
-	{1, "Gaurav", "LnD", 1001},
-	{2, "Anupam", "Cloud", 10002},
-	{3, "Udbhav", "SRE", 20002},
-}
+var empRepo = repository.NewInMem()
 
 func EmployeesIndexHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	employees, err := empRepo.ListAll()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+		return
+	}
+
 	json.NewEncoder(w).Encode(employees)
 }
 
@@ -33,11 +39,15 @@ func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	newEmp.ID = len(employees) + 1
+	createdEmp, err := empRepo.Save(newEmp)
 
-	employees = append(employees, newEmp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+		return
+	}
 
-	json.NewEncoder(w).Encode(newEmp)
+	json.NewEncoder(w).Encode(createdEmp)
 }
 
 func EmployeesHandler(w http.ResponseWriter, req *http.Request) {
