@@ -3,21 +3,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
-	"time"
+	"os"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+
+	"algogrit.com/empserver/entities"
 )
 
-type Employee struct {
-	ID         int    `json:"-"`
-	Name       string `json:"name"`
-	Department string `json:"speciality"`
-	ProjectID  int    `json:"project"`
-}
-
-var employees = []Employee{
+var employees = []entities.Employee{
 	{1, "Gaurav", "LnD", 1001},
 	{2, "Anupam", "Cloud", 10002},
 	{3, "Udbhav", "SRE", 20002},
@@ -29,7 +24,7 @@ func EmployeesIndexHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
-	var newEmp Employee
+	var newEmp entities.Employee
 	err := json.NewDecoder(req.Body).Decode(&newEmp)
 
 	if err != nil {
@@ -53,17 +48,17 @@ func EmployeesHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func LoggingMiddleware(handler http.Handler) http.Handler {
-	h := func(w http.ResponseWriter, req *http.Request) {
-		begin := time.Now()
+// func LoggingMiddleware(handler http.Handler) http.Handler {
+// 	h := func(w http.ResponseWriter, req *http.Request) {
+// 		begin := time.Now()
 
-		handler.ServeHTTP(w, req)
+// 		handler.ServeHTTP(w, req)
 
-		log.Printf("%s %s tooks %s\n", req.Method, req.URL, time.Since(begin))
-	}
+// 		log.Printf("%s %s tooks %s\n", req.Method, req.URL, time.Since(begin))
+// 	}
 
-	return http.HandlerFunc(h)
-}
+// 	return http.HandlerFunc(h)
+// }
 
 func main() {
 	r := mux.NewRouter()
@@ -77,5 +72,5 @@ func main() {
 	r.HandleFunc("/employees", EmployeesIndexHandler).Methods("GET")
 	r.HandleFunc("/employees", EmployeeCreateHandler).Methods("POST")
 
-	http.ListenAndServe("localhost:8000", LoggingMiddleware(r))
+	http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
 }
