@@ -15,6 +15,12 @@ import (
 	"algogrit.com/empserver/entities"
 )
 
+func TestMain(m *testing.M) {
+	// Setup
+	m.Run()
+	// Teardown
+}
+
 func TestCreateV1Handler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockService := service.NewMockEmployeeService(ctrl)
